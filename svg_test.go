@@ -19,7 +19,13 @@ func mustReadFile(f string) []byte {
 	return b
 }
 
-func TestNew(t *testing.T) {
+func TestNew1(t *testing.T) {
+	qr, err := New("")
+	assert.Nil(t, qr)
+	assert.Error(t, err)
+}
+
+func TestNew2(t *testing.T) {
 	qr, err := New("https://github.com/wamuir/svg-qr-code")
 	assert.NotNil(t, qr)
 	assert.NoError(t, err)
