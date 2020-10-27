@@ -1,8 +1,8 @@
 package qrsvg
 
 import (
-	"io/ioutil"
 	"image/color"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
