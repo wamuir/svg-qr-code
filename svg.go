@@ -11,7 +11,6 @@ import (
 
 // defaults
 var (
-	stroke      = "none"
 	blocksize   = 16
 	borderwidth = 4
 )
@@ -41,7 +40,6 @@ type Block struct {
 	Width  int    `xml:"width,attr"`
 	Height int    `xml:"height,attr"`
 	Fill   string `xml:"fill,attr"`
-	Stroke string `xml:"stroke,attr"`
 }
 
 // SVG returns the vector representation of a QR code, as a Go struct.
@@ -58,7 +56,7 @@ func (q *QR) SVG() *SVG {
 	svg.Height = svg.Width
 
 	svg.Blocks = make([]Block, 1+w*w)
-	svg.Blocks[0] = Block{0, 0, svg.Width, svg.Height, hex(q.Borderfill), stroke}
+	svg.Blocks[0] = Block{0, 0, svg.Width, svg.Height, hex(q.Borderfill)}
 
 	for x := 0; x < w; x++ {
 		for y := 0; y < w; y++ {
@@ -68,7 +66,6 @@ func (q *QR) SVG() *SVG {
 				Width:  q.Blocksize,
 				Height: q.Blocksize,
 				Fill:   hex(i.At(x, y)),
-				Stroke: stroke,
 			}
 		}
 	}
