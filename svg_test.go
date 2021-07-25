@@ -4,8 +4,6 @@ import (
 	"image/color"
 	"io/ioutil"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var example = mustReadFile("example.svg")
@@ -21,26 +19,42 @@ func mustReadFile(f string) []byte {
 
 func TestNew1(t *testing.T) {
 	qr, err := New("")
-	assert.Nil(t, qr)
-	assert.Error(t, err)
+	if err == nil {
+		t.Errorf("err = %v; want non-nil", err)
+	}
+	if qr != nil {
+		t.Errorf("qr = %v, want %v", qr, nil)
+	}
 }
 
 func TestNew2(t *testing.T) {
 	qr, err := New("https://github.com/wamuir/svg-qr-code")
-	assert.NotNil(t, qr)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Errorf("err = %v; want %v", err, nil)
+	}
+	if qr == nil {
+		t.Errorf("qr = %v, want non-nil", qr)
+	}
 }
 
 func TestHex(t *testing.T) {
 	h := hex(color.Black)
-	assert.Equal(t, h, "#000000")
+	if h != "#000000" {
+		t.Errorf("h = %v, want %v", h, "#000000")
+	}
 }
 
 func TestQRString(t *testing.T) {
 	qr, err := New("https://github.com/wamuir/svg-qr-code")
-	assert.NotNil(t, qr)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Errorf("err = %v; want %v", err, nil)
+	}
+	if qr == nil {
+		t.Errorf("qr = %v, want non-nil", qr)
+	}
 
 	svg := qr.String()
-	assert.Equal(t, svg, string(example))
+	if svg != string(example) {
+		t.Errorf("svg = %v, want %v", svg, string(example))
+	}
 }
