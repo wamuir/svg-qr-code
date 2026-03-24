@@ -2,7 +2,7 @@ package qrsvg
 
 import (
 	"image/color"
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -10,7 +10,7 @@ var example = mustReadFile("example.svg")
 
 func mustReadFile(f string) []byte {
 
-	b, err := ioutil.ReadFile(f)
+	b, err := os.ReadFile(f)
 	if err != nil {
 		panic(err)
 	}
