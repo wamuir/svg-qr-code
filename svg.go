@@ -15,6 +15,25 @@ var (
 	borderwidth = 4
 )
 
+type RecoveryLevel = qrcode.RecoveryLevel
+
+const (
+	Low     RecoveryLevel = qrcode.Low
+	Medium  RecoveryLevel = qrcode.Medium
+	High    RecoveryLevel = qrcode.High
+	Highest RecoveryLevel = qrcode.Highest
+)
+
+type opts struct {
+	Level RecoveryLevel
+}
+
+func WithRecoveryLevel(level RecoveryLevel) func(*opts) {
+	return func(o *opts) {
+		o.Level = level
+	}
+}
+
 // QR holds a QR Code (from github.com/skip2/go-qrcode) and SVG settings.
 type QR struct {
 	Code        *qrcode.QRCode // underlying QR Code
@@ -45,7 +64,6 @@ type Block struct {
 // SVG returns the vector representation of a QR code, as a Go struct.
 // This could, for instance, be marshaled with encoding/xml.
 func (q *QR) SVG() *SVG {
-
 	q.Code.DisableBorder = true
 	var i image.Image = q.Code.Image(0)
 	var w int = i.Bounds().Max.X
@@ -76,6 +94,7 @@ func (q *QR) SVG() *SVG {
 // String() returns the SVG as a string and satisfies the fmt.Stringer interface.
 func (s *SVG) String() string {
 	x, _ := xml.Marshal(s)
+
 	return string(x)
 }
 
@@ -86,18 +105,27 @@ func (q *QR) String() string {
 
 // New returns the QR for the provided string, with default settings for blocksize,
 // borderwidth and background color.  Call .String() to obtain the SVG string.
-func New(s string) (*QR, error) {
+func New(s string, options ...func(*opts)) (*QR, error) {
+	o := &opts{
+		Level: Highest,
+	}
 
-	code, err := qrcode.New(s, qrcode.Highest)
+	for _, f := range options {
+		f(o)
+	}
+
+	code, err := qrcode.New(s, o.Level)
 	if err != nil {
 		return nil, err
 	}
 
 	q := QR{code, blocksize, borderwidth, code.BackgroundColor}
+
 	return &q, nil
 }
 
 func hex(c color.Color) string {
 	rgba := color.RGBAModel.Convert(c).(color.RGBA)
+
 	return fmt.Sprintf("#%.2x%.2x%.2x", rgba.R, rgba.G, rgba.B)
 }

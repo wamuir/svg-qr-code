@@ -32,4 +32,4 @@ This module can be installed with the `go get` command:
 
 # Example Result
 
-![Quick Response (QR) Code](https://github.com/wamuir/svg-qr-code/raw/main/example.svg)
+![Quick Response (QR) Code](https://github.com/wamuir/svg-qr-code/raw/main/testdata/example-highest.svg)
