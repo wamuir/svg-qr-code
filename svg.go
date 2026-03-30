@@ -10,9 +10,9 @@ import (
 )
 
 // defaults
-var (
-	blocksize   = 16
-	borderwidth = 4
+const (
+	defaultBlocksize   = 16
+	defaultBorderwidth = 4
 )
 
 type RecoveryLevel = qrcode.RecoveryLevel
@@ -25,7 +25,10 @@ const (
 )
 
 type opts struct {
-	Level RecoveryLevel
+	Blocksize   int
+	Borderwidth int
+	Level       RecoveryLevel
+	Style       *CDataString
 }
 
 func WithRecoveryLevel(level RecoveryLevel) func(*opts) {
@@ -34,22 +37,35 @@ func WithRecoveryLevel(level RecoveryLevel) func(*opts) {
 	}
 }
 
+func WithStyle(style string) func(*opts) {
+	return func(o *opts) {
+		if style != "" {
+			o.Style = &CDataString{style}
+		}
+	}
+}
+
+type CDataString struct {
+	Value string `xml:",cdata"`
+}
+
 // QR holds a QR Code (from github.com/skip2/go-qrcode) and SVG settings.
 type QR struct {
 	Code        *qrcode.QRCode // underlying QR Code
 	Blocksize   int            // size of each block in pixels, default = 16 pixels
 	Borderwidth int            // size of the border in blocks, default = 4 blocks
 	Borderfill  color.Color    // fill color for the border
+	Style       *CDataString   // css styling
 }
 
 // SVG is the vector representation of a QR code, as a Go struct.
 type SVG struct {
-	XMLName xml.Name `xml:"svg"`
-	NS      string   `xml:"xmlns,attr"`
-	Width   int      `xml:"width,attr"`
-	Height  int      `xml:"height,attr"`
-	Style   string   `xml:"style,attr"`
-	Blocks  []Block  `xml:"rect"`
+	XMLName xml.Name     `xml:"svg"`
+	NS      string       `xml:"xmlns,attr"`
+	Width   int          `xml:"width,attr"`
+	Height  int          `xml:"height,attr"`
+	Style   *CDataString `xml:"style,omitempty"`
+	Blocks  []Block      `xml:"rect"`
 }
 
 // Block is a color block in the rendered QR code.
@@ -59,6 +75,7 @@ type Block struct {
 	Width  int    `xml:"width,attr"`
 	Height int    `xml:"height,attr"`
 	Fill   string `xml:"fill,attr"`
+	Class  string `xml:"class,attr,omitempty"`
 }
 
 // SVG returns the vector representation of a QR code, as a Go struct.
@@ -73,17 +90,27 @@ func (q *QR) SVG() *SVG {
 	svg.Width = (w + 2*q.Borderwidth) * q.Blocksize
 	svg.Height = svg.Width
 
+	svg.Style = q.Style
+
+	fgHex := hex(q.Code.ForegroundColor)
+
 	svg.Blocks = make([]Block, 1+w*w)
-	svg.Blocks[0] = Block{0, 0, svg.Width, svg.Height, hex(q.Borderfill)}
+	svg.Blocks[0] = Block{X: 0, Y: 0, Width: svg.Width, Height: svg.Height, Fill: hex(q.Borderfill)}
 
 	for x := 0; x < w; x++ {
 		for y := 0; y < w; y++ {
+			fill := hex(i.At(x, y))
+			class := ""
+			if fill == fgHex {
+				class = "dark"
+			}
 			svg.Blocks[1+x*w+y] = Block{
 				X:      (x + q.Borderwidth) * q.Blocksize,
 				Y:      (y + q.Borderwidth) * q.Blocksize,
 				Width:  q.Blocksize,
 				Height: q.Blocksize,
-				Fill:   hex(i.At(x, y)),
+				Fill:   fill,
+				Class:  class,
 			}
 		}
 	}
@@ -107,7 +134,9 @@ func (q *QR) String() string {
 // borderwidth and background color.  Call .String() to obtain the SVG string.
 func New(s string, options ...func(*opts)) (*QR, error) {
 	o := &opts{
-		Level: Highest,
+		Blocksize:   defaultBlocksize,
+		Borderwidth: defaultBorderwidth,
+		Level:       Highest,
 	}
 
 	for _, f := range options {
@@ -119,7 +148,13 @@ func New(s string, options ...func(*opts)) (*QR, error) {
 		return nil, err
 	}
 
-	q := QR{code, blocksize, borderwidth, code.BackgroundColor}
+	q := QR{
+		Code:        code,
+		Blocksize:   o.Blocksize,
+		Borderwidth: o.Borderwidth,
+		Borderfill:  code.BackgroundColor,
+		Style:       o.Style,
+	}
 
 	return &q, nil
 }
