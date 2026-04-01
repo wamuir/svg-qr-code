@@ -127,6 +127,62 @@ func TestQRStringLevelHighest(t *testing.T) {
 	}
 }
 
+func TestQRStringWithBlocksize(t *testing.T) {
+	qr, err := New("https://github.com/wamuir/svg-qr-code", WithBlocksize(8))
+	if err != nil {
+		t.Errorf("err = %v; want %v", err, nil)
+	}
+	if qr == nil {
+		t.Error("qr is nil, want non-nil")
+	}
+
+	expected := mustReadFile("testdata/example-blocksize8.svg")
+
+	svg := qr.String()
+	if svg != string(expected) {
+		t.Errorf("svg = %v, want %v", svg, string(expected))
+	}
+}
+
+func TestQRStringWithBorderwidth(t *testing.T) {
+	qr, err := New("https://github.com/wamuir/svg-qr-code", WithBorderwidth(2))
+	if err != nil {
+		t.Errorf("err = %v; want %v", err, nil)
+	}
+	if qr == nil {
+		t.Error("qr is nil, want non-nil")
+	}
+
+	expected := mustReadFile("testdata/example-borderwidth2.svg")
+
+	svg := qr.String()
+	if svg != string(expected) {
+		t.Errorf("svg = %v, want %v", svg, string(expected))
+	}
+}
+
+func TestNewInvalidOptions(t *testing.T) {
+	tests := []struct {
+		name string
+		opts []func(*opts)
+	}{
+		{"blocksize zero", []func(*opts){WithBlocksize(0)}},
+		{"blocksize negative", []func(*opts){WithBlocksize(-1)}},
+		{"borderwidth negative", []func(*opts){WithBorderwidth(-1)}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qr, err := New("https://github.com/wamuir/svg-qr-code", tt.opts...)
+			if err == nil {
+				t.Error("err is nil, want non-nil")
+			}
+			if qr != nil {
+				t.Errorf("qr = %v, want nil", qr)
+			}
+		})
+	}
+}
+
 func TestQRStringWithStyle(t *testing.T) {
 	style := `.dark{fill:#370240}`
 

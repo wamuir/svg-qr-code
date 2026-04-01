@@ -31,6 +31,18 @@ type opts struct {
 	Style       *CDataString
 }
 
+func WithBlocksize(blocksize int) func(*opts) {
+	return func(o *opts) {
+		o.Blocksize = blocksize
+	}
+}
+
+func WithBorderwidth(borderwidth int) func(*opts) {
+	return func(o *opts) {
+		o.Borderwidth = borderwidth
+	}
+}
+
 func WithRecoveryLevel(level RecoveryLevel) func(*opts) {
 	return func(o *opts) {
 		o.Level = level
@@ -141,6 +153,13 @@ func New(s string, options ...func(*opts)) (*QR, error) {
 
 	for _, f := range options {
 		f(o)
+	}
+
+	if o.Blocksize < 1 {
+		return nil, fmt.Errorf("blocksize must be at least 1, got %d", o.Blocksize)
+	}
+	if o.Borderwidth < 0 {
+		return nil, fmt.Errorf("borderwidth must be at least 0, got %d", o.Borderwidth)
 	}
 
 	code, err := qrcode.New(s, o.Level)
